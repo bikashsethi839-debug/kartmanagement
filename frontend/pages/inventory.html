@@ -16,14 +16,25 @@
 
   <main>
     <h1>Inventory Entry (Product Builder)</h1>
+
+    <div style="display:flex;gap:12px;align-items:center;margin-bottom:12px">
+      <label class="small-muted">Edit existing:</label>
+      <select id="product-select"><option value="">-- New Product --</option></select>
+      <button id="load-selected" type="button">Load</button>
+    </div>
+
     <form id="inventory-form">
       <input name="name" placeholder="Product name" />
       <input name="sku" placeholder="SKU" />
       <input name="price" placeholder="Price" type="number" step="0.01" />
       <input name="stock" placeholder="Stock" type="number" />
       <textarea name="description" placeholder="Description"></textarea>
-      <button type="submit">Create</button>
-      <button type="button" id="clear-form">Clear Form</button>
+      <div style="display:flex;gap:8px">
+        <button type="submit" id="create-btn">Create</button>
+        <button type="button" id="update-btn" style="display:none">Save Changes</button>
+        <button type="button" id="delete-btn" style="display:none;background:var(--danger)">Delete</button>
+        <button type="button" id="clear-form">Clear Form</button>
+      </div>
     </form>
 
     <div id="live-preview"></div>

@@ -26,3 +26,12 @@ class ReviewService:
         row = cur.fetchone()
         conn.close()
         return dict(row) if row else None
+
+    def delete(self, review_id):
+        conn = get_connection()
+        cur = conn.cursor()
+        cur.execute('DELETE FROM reviews WHERE id=?', (review_id,))
+        conn.commit()
+        changed = cur.rowcount
+        conn.close()
+        return changed > 0

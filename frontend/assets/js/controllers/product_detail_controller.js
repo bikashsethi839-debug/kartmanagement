@@ -64,7 +64,16 @@
       const json = await r.json();
       const list = json.data || [];
       const el = q('#reviews-list');
-      el.innerHTML = list.map(rv=>`<div class="card"><strong>${rv.author}</strong> (${rv.rating})<p>${rv.comment||''}</p></div>`).join('') || '<p>No reviews</p>';
+      el.innerHTML = list.map(rv=>`<div class="card"><strong>${rv.author}</strong> (${rv.rating})<p>${rv.comment||''}</p><p><button class="del-review" data-id="${rv.id}" style="background:transparent;color:var(--danger)">Delete</button></p></div>`).join('') || '<p>No reviews</p>';
+
+      // wire delete buttons
+      el.querySelectorAll('.del-review').forEach(b=>b.addEventListener('click', async ()=>{
+        const rid = b.getAttribute('data-id');
+        if(window.UI){ const ok = await window.UI.confirm('Delete review?'); if(!ok) return; }
+        const res = await fetch(`/api/products/${id}/reviews/${rid}`, {method:'DELETE'});
+        if(res.ok){ if(window.UI) window.UI.toast('Review removed'); loadReviews(); }
+        else { if(window.UI) window.UI.toast('Failed to remove'); }
+      }));
     }
 
     loadReviews();
@@ -74,8 +83,8 @@
       const form = e.target;
       const payload = {author: form.author.value||'Anon', rating: parseInt(form.rating.value||5), comment: form.comment.value};
       const r = await fetch(`/api/products/${id}/reviews`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)});
-      if(r.ok){ alert('Review added'); form.reset(); loadReviews(); }
-      else alert('Failed');
+      if(r.ok){ if(window.UI) window.UI.toast('Review added'); form.reset(); loadReviews(); }
+      else { if(window.UI) window.UI.toast('Failed'); }
     });
   }
 

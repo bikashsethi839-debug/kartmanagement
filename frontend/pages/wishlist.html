@@ -1,0 +1,34 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Wishlist - Kart Management</title>
+  <link rel="stylesheet" href="/assets/css/style.css">
+</head>
+<body>
+  <nav>
+    <a href="/catalog.html">Catalog</a> |
+    <a href="/dashboard.html">Dashboard</a> |
+    <a href="/inventory.html">Inventory</a> |
+    <a href="/product.html">Product</a> |
+    <a href="/cart.html">Cart</a> |
+    <a href="/wishlist.html">Wishlist</a>
+  </nav>
+
+  <main>
+    <h1>Wishlist</h1>
+    <div id="wishlist-items"></div>
+  </main>
+  <script src="/assets/js/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async ()=>{
+      const r = await fetch('/api/cart/wishlist');
+      const data = (await r.json()).data || [];
+      const c = document.getElementById('wishlist-items');
+      if(data.length===0) return c.innerHTML = '<p>Wishlist empty</p>';
+      c.innerHTML = data.map(i=>`<div class="card"><h3>${i.name}</h3><p>$${i.price}</p><p><button data-id="${i.id}" class="remove">Remove</button></p></div>`).join('');
+      c.querySelectorAll('.remove').forEach(b=>b.addEventListener('click', async ()=>{ const id=b.getAttribute('data-id'); await fetch(`/api/cart/wishlist/${id}`, {method:'DELETE'}); window.UI.toast('Removed'); b.closest('.card').remove(); }));
+    });
+  </script>
+</body>
+</html>

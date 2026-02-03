@@ -1,3 +1,4 @@
+import sqlite3
 from database.connection import get_connection
 
 class ProductService:
@@ -27,16 +28,11 @@ class ProductService:
             product_id = cur.lastrowid
             conn.close()
             return self.get(product_id)
-        except Exception as e:
-            # handle unique SKU conflict by retrying without SKU
+        except sqlite3.IntegrityError as e:
             conn.rollback()
+            # Fail explicitly on unique constraint rather than silently removing sku
             if 'UNIQUE' in str(e).upper():
-                cur.execute('INSERT INTO products (name, sku, price, stock, description) VALUES (?, ?, ?, ?, ?)',
-                            (payload.get('name'), None, payload.get('price', 0.0), payload.get('stock', 0), payload.get('description')))
-                conn.commit()
-                product_id = cur.lastrowid
-                conn.close()
-                return self.get(product_id)
+                raise
             raise
 
     def update(self, product_id, payload):
@@ -49,16 +45,11 @@ class ProductService:
             changed = cur.rowcount
             conn.close()
             return self.get(product_id) if changed else None
-        except Exception as e:
+        except sqlite3.IntegrityError as e:
             conn.rollback()
             if 'UNIQUE' in str(e).upper():
-                # retry without SKU
-                cur.execute('UPDATE products SET name=?, sku=NULL, price=?, stock=?, description=? WHERE id=?',
-                            (payload.get('name'), payload.get('price'), payload.get('stock'), payload.get('description'), product_id))
-                conn.commit()
-                changed = cur.rowcount
-                conn.close()
-                return self.get(product_id) if changed else None
+                # revert change and signal error
+                raise
             raise
 
     def delete(self, product_id):

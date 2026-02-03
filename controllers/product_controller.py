@@ -69,3 +69,10 @@ def create_review(product_id):
     data = json_body()
     created_review = review_service.create(product_id, data)
     return created(created_review)
+
+@product_bp.route('/<int:product_id>/reviews/<int:review_id>', methods=['DELETE'])
+def delete_review(product_id, review_id):
+    deleted = review_service.delete(review_id)
+    if not deleted:
+        return err('Not found', 404)
+    return ok({'deleted': review_id})

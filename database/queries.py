@@ -41,3 +41,12 @@ SEED_REVIEWS = [
     # review for product id 1 (seeded)
     (1, 'Alice', 5, 'Love the Red Kart!')
 ]
+
+CREATE_WISHLIST_TABLE = """
+CREATE TABLE IF NOT EXISTS wishlist (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    product_id INTEGER NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(product_id) REFERENCES products(id)
+);
+"""
