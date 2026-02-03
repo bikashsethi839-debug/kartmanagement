@@ -1,0 +1,34 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Inventory Entry - Kart Management</title>
+  <link rel="stylesheet" href="/assets/css/style.css">
+</head>
+<body>
+  <nav>
+    <a href="/catalog.html">Catalog</a> |
+    <a href="/dashboard.html">Dashboard</a> |
+    <a href="/inventory.html">Inventory</a> |
+    <a href="/product.html">Product</a> |
+    <a href="/cart.html">Cart</a>
+  </nav>
+
+  <main>
+    <h1>Inventory Entry (Product Builder)</h1>
+    <form id="inventory-form">
+      <input name="name" placeholder="Product name" />
+      <input name="sku" placeholder="SKU" />
+      <input name="price" placeholder="Price" type="number" step="0.01" />
+      <input name="stock" placeholder="Stock" type="number" />
+      <textarea name="description" placeholder="Description"></textarea>
+      <button type="submit">Create</button>
+      <button type="button" id="clear-form">Clear Form</button>
+    </form>
+
+    <div id="live-preview"></div>
+  </main>
+
+  <script src="/assets/js/app.js"></script>
+</body>
+</html>
