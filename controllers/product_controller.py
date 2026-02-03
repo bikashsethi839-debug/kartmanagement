@@ -38,3 +38,19 @@ def delete_product(product_id):
     if not deleted:
         return err('Not found', 404)
     return ok({'deleted': product_id})
+
+
+@product_bp.route('/bulk-delete', methods=['POST'])
+def bulk_delete():
+    data = json_body()
+    ids = data.get('ids', [])
+    deleted_count = service.bulk_delete(ids)
+    return ok({'deleted': deleted_count})
+
+
+@product_bp.route('/<int:product_id>/duplicate', methods=['POST'])
+def duplicate_product(product_id):
+    new_item = service.duplicate(product_id)
+    if not new_item:
+        return err('Not found', 404)
+    return created(new_item)

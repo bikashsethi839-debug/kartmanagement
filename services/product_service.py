@@ -45,3 +45,26 @@ class ProductService:
         changed = cur.rowcount
         conn.close()
         return changed > 0
+
+    def bulk_delete(self, ids):
+        if not ids:
+            return 0
+        conn = get_connection()
+        cur = conn.cursor()
+        placeholders = ','.join('?' for _ in ids)
+        cur.execute(f'DELETE FROM products WHERE id IN ({placeholders})', tuple(ids))
+        cnt = cur.rowcount
+        conn.commit()
+        conn.close()
+        return cnt
+
+    def duplicate(self, product_id):
+        orig = self.get(product_id)
+        if not orig:
+            return None
+        payload = dict(orig)
+        payload['name'] = payload['name'] + ' (Copy)'
+        payload.pop('id', None)
+        # ensure unique sku
+        payload['sku'] = (payload.get('sku') or '') + '-COPY'
+        return self.create(payload)

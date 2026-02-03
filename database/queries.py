@@ -20,6 +20,18 @@ CREATE TABLE IF NOT EXISTS cart (
 );
 """
 
+CREATE_REVIEWS_TABLE = """
+CREATE TABLE IF NOT EXISTS reviews (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    product_id INTEGER NOT NULL,
+    author TEXT NOT NULL,
+    rating INTEGER NOT NULL DEFAULT 5,
+    comment TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(product_id) REFERENCES products(id)
+);
+"""
+
 SEED_PRODUCTS = [
     ("Red Kart", "RK-100", 299.99, 10, "A fast red kart"),
     ("Blue Kart", "BK-200", 249.99, 5, "A reliable blue kart"),

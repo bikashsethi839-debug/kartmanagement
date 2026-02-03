@@ -7,8 +7,9 @@ def init_db():
     cur = conn.cursor()
     cur.executescript(CREATE_PRODUCTS_TABLE)
     cur.executescript(CREATE_CART_TABLE)
+    cur.executescript(CREATE_REVIEWS_TABLE)
 
-    # Seed
+    # Seed products
     cur.executemany(
         "INSERT OR IGNORE INTO products (name, sku, price, stock, description) VALUES (?, ?, ?, ?, ?)",
         SEED_PRODUCTS
