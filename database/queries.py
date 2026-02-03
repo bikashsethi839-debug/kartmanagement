@@ -36,3 +36,8 @@ SEED_PRODUCTS = [
     ("Red Kart", "RK-100", 299.99, 10, "A fast red kart"),
     ("Blue Kart", "BK-200", 249.99, 5, "A reliable blue kart"),
 ]
+
+SEED_REVIEWS = [
+    # review for product id 1 (seeded)
+    (1, 'Alice', 5, 'Love the Red Kart!')
+]

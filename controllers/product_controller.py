@@ -39,18 +39,33 @@ def delete_product(product_id):
         return err('Not found', 404)
     return ok({'deleted': product_id})
 
-
-@product_bp.route('/bulk-delete', methods=['POST'])
-def bulk_delete():
-    data = json_body()
-    ids = data.get('ids', [])
-    deleted_count = service.bulk_delete(ids)
-    return ok({'deleted': deleted_count})
-
-
 @product_bp.route('/<int:product_id>/duplicate', methods=['POST'])
 def duplicate_product(product_id):
     new_item = service.duplicate(product_id)
     if not new_item:
         return err('Not found', 404)
     return created(new_item)
+
+@product_bp.route('/bulk-delete', methods=['POST'])
+def bulk_delete_products():
+    payload = request.get_json(silent=True) or {}
+    ids = payload.get('ids', [])
+    if not isinstance(ids, list) or not ids:
+        return err('Provide ids list', 400)
+    deleted = service.bulk_delete(ids)
+    return ok({'deleted_count': deleted})
+
+# Reviews endpoints
+from services.review_service import ReviewService
+review_service = ReviewService()
+
+@product_bp.route('/<int:product_id>/reviews', methods=['GET'])
+def list_reviews(product_id):
+    reviews = review_service.list_for_product(product_id)
+    return ok(reviews)
+
+@product_bp.route('/<int:product_id>/reviews', methods=['POST'])
+def create_review(product_id):
+    data = json_body()
+    created_review = review_service.create(product_id, data)
+    return created(created_review)

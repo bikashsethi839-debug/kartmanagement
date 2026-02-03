@@ -4,7 +4,7 @@ class ReviewService:
     def list_for_product(self, product_id):
         conn = get_connection()
         cur = conn.cursor()
-        cur.execute('SELECT id, product_id, author, rating, comment, created_at FROM reviews WHERE product_id=? ORDER BY created_at DESC', (product_id,))
+        cur.execute('SELECT * FROM reviews WHERE product_id=? ORDER BY id DESC', (product_id,))
         rows = [dict(r) for r in cur.fetchall()]
         conn.close()
         return rows
@@ -13,16 +13,16 @@ class ReviewService:
         conn = get_connection()
         cur = conn.cursor()
         cur.execute('INSERT INTO reviews (product_id, author, rating, comment) VALUES (?, ?, ?, ?)',
-                    (product_id, payload.get('author', 'Anonymous'), payload.get('rating', 5), payload.get('comment')))
+                    (product_id, payload.get('author', 'Anon'), payload.get('rating', 5), payload.get('comment')))
         conn.commit()
-        rid = cur.lastrowid
+        review_id = cur.lastrowid
         conn.close()
-        return self.get(rid)
+        return self.get(review_id)
 
     def get(self, review_id):
         conn = get_connection()
         cur = conn.cursor()
-        cur.execute('SELECT id, product_id, author, rating, comment, created_at FROM reviews WHERE id=?', (review_id,))
+        cur.execute('SELECT * FROM reviews WHERE id=?', (review_id,))
         row = cur.fetchone()
         conn.close()
         return dict(row) if row else None
