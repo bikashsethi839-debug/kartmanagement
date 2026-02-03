@@ -1,5 +1,5 @@
 from .connection import get_connection
-from .queries import CREATE_PRODUCTS_TABLE, CREATE_CART_TABLE, SEED_PRODUCTS
+from .queries import CREATE_PRODUCTS_TABLE, CREATE_CART_TABLE, CREATE_REVIEWS_TABLE, SEED_PRODUCTS
 
 
 def init_db():
