@@ -1,18 +1,17 @@
-from flask import Blueprint, jsonify, request, send_from_directory
-from controllers.product_controller import product_bp
-from controllers.cart_controller import cart_bp
+from fastapi import FastAPI
+from fastapi.responses import FileResponse
+from controllers.product_controller import product_router
+from controllers.cart_controller import cart_router
+import os
 
-def register_routes(app):
-    api_bp = Blueprint('api', __name__, url_prefix='/api')
 
-    # Register API blueprints
-    app.register_blueprint(product_bp)
-    app.register_blueprint(cart_bp)
+def register_routes(app: FastAPI):
+    app.include_router(product_router)
+    app.include_router(cart_router)
 
-    # Static page fallback
-    @app.route('/<path:page>')
-    def pages(page):
-        try:
-            return send_from_directory('frontend/pages', page)
-        except Exception:
-            return send_from_directory('frontend/pages', '404.html'), 404
+    @app.get("/{page:path}")
+    def pages(page: str):
+        path = os.path.join("frontend/pages", page)
+        if os.path.exists(path):
+            return FileResponse(path)
+        return FileResponse("frontend/pages/404.html", status_code=404)

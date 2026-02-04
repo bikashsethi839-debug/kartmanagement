@@ -1,5 +1,8 @@
-from flask import request
+from fastapi import Request
 
 
-def json_body():
-    return request.get_json(silent=True) or {}
+async def json_body(request: Request):
+    try:
+        return await request.json()
+    except Exception:
+        return {}

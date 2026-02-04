@@ -1,10 +1,11 @@
 from app import app
 from database.complaintstable import init_db
+from fastapi.testclient import TestClient
 
 
 def test_create_product():
     init_db()
-    client = app.test_client()
+    client = TestClient(app)
     payload = {
         'name': 'Test Kart',
         'sku': 'TK-999',
@@ -14,13 +15,13 @@ def test_create_product():
     }
     rv = client.post('/api/products', json=payload)
     assert rv.status_code == 201
-    data = rv.get_json()
+    data = rv.json()
     assert data['status'] == 'created'
     created = data['data']
     # fetch it
     rv = client.get(f"/api/products/{created['id']}")
     assert rv.status_code == 200
-    got = rv.get_json()['data']
+    got = rv.json()['data']
     assert got['name'] == payload['name']
     assert got['sku'] == payload['sku']
     assert float(got['price']) == payload['price']
