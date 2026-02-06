@@ -1,15 +1,10 @@
-from fastapi.responses import JSONResponse
-
-
 def ok(data=None):
-    payload = {"status": "ok", "data": data}
-    return JSONResponse(content=payload, status_code=200)
+    return {"status": "ok", "data": data}
 
 
 def created(data=None):
-    payload = {"status": "created", "data": data}
-    return JSONResponse(content=payload, status_code=201)
+    return {"status": "created", "data": data}
 
 
 def err(message, code=400):
-    return JSONResponse(content={"status": "error", "message": message}, status_code=code)
+    return {"status": "error", "message": message}

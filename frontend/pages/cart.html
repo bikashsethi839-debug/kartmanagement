@@ -1,24 +1,378 @@
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta charset="utf-8">
-  <title>Cart - Kart Management</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shopping Cart - Kart Management</title>
   <link rel="stylesheet" href="/assets/css/style.css">
 </head>
 <body>
   <nav>
-    <a href="/catalog.html">Catalog</a> |
-    <a href="/dashboard.html">Dashboard</a> |
-    <a href="/inventory.html">Inventory</a> |
-    <a href="/product.html">Product</a> |
-    <a href="/cart.html">Cart</a>
+    <div class="nav-container">
+      <a href="/" class="nav-brand">🛒 Kart Management</a>
+      <div class="nav-links">
+        <a href="/catalog.html">📦 Catalog</a>
+        <a href="/inventory.html">📊 Inventory</a>
+        <a href="/cart.html" class="active">🛍️ Cart</a>
+        <a href="/dashboard.html">📈 Dashboard</a>
+      </div>
+    </div>
   </nav>
 
   <main>
-    <h1>Shopping Cart</h1>
-    <div id="cart-items"></div>
+    <div class="page-header">
+      <h1>🛍️ Shopping Cart</h1>
+      <div class="btn-group">
+        <button class="btn btn-primary" onclick="openAddModal()">➕ Add Item</button>
+        <button class="btn btn-danger" onclick="clearCart()">🗑️ Clear Cart</button>
+      </div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon primary">🛍️</div>
+        <div class="stat-info">
+          <h3>Total Items</h3>
+          <p id="totalItems">0</p>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon success">💰</div>
+        <div class="stat-info">
+          <h3>Total Price</h3>
+          <p id="totalPrice">$0.00</p>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon warning">📦</div>
+        <div class="stat-info">
+          <h3>Unique Products</h3>
+          <p id="uniqueProducts">0</p>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon danger">💳</div>
+        <div class="stat-info">
+          <h3>Avg Price</h3>
+          <p id="avgPrice">$0.00</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th>Price</th>
+            <th>Quantity</th>
+            <th>Subtotal</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="cartTable"></tbody>
+      </table>
+    </div>
+
+    <div id="emptyCart" class="empty-state" style="display:none;">
+      <div class="empty-state-icon">🛒</div>
+      <h3>Your cart is empty</h3>
+      <p>Add some products to get started</p>
+      <button class="btn btn-primary" onclick="openAddModal()">Browse Products</button>
+    </div>
+
+    <div style="margin-top: 2rem; text-align: right;">
+      <button class="btn btn-success" style="font-size: 1.2rem; padding: 1rem 2rem;" onclick="checkout()">
+        💳 Checkout - <span id="checkoutTotal">$0.00</span>
+      </button>
+    </div>
   </main>
+
+  <!-- Add Item Modal -->
+  <div id="addModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Add to Cart</h2>
+        <button class="close-btn" onclick="closeAddModal()">✕</button>
+      </div>
+      <form id="addForm" onsubmit="addToCart(event)">
+        <div class="form-group">
+          <label>Select Product *</label>
+          <select id="productSelect" required onchange="updatePrice()">
+            <option value="">-- Select Product --</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Price</label>
+          <input type="text" id="selectedPrice" readonly>
+        </div>
+        <div class="form-group">
+          <label>Quantity *</label>
+          <input type="number" id="quantity" value="1" min="1" required>
+        </div>
+        <div class="btn-group">
+          <button type="submit" class="btn btn-success">➕ Add to Cart</button>
+          <button type="button" class="btn btn-secondary" onclick="closeAddModal()">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Edit Item Modal -->
+  <div id="editModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Update Quantity</h2>
+        <button class="close-btn" onclick="closeEditModal()">✕</button>
+      </div>
+      <form id="editForm" onsubmit="updateCartItem(event)">
+        <div class="form-group">
+          <label>Product</label>
+          <input type="text" id="editProductName" readonly>
+        </div>
+        <div class="form-group">
+          <label>Quantity *</label>
+          <input type="number" id="editQuantity" min="1" required>
+        </div>
+        <div class="btn-group">
+          <button type="submit" class="btn btn-success">💾 Update</button>
+          <button type="button" class="btn btn-secondary" onclick="closeEditModal()">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <script src="/assets/js/app.js"></script>
-  <script src="/assets/js/controllers/cart_controller.js"></script>
+  <script>
+    let cartItems = [];
+    let products = [];
+    let editingItemId = null;
+
+    async function loadCart() {
+      try {
+        const res = await fetch('/api/cart');
+        const data = await res.json();
+        cartItems = data.data || [];
+        renderCart();
+        updateStats();
+      } catch (error) {
+        console.error('Error loading cart:', error);
+      }
+    }
+
+    async function loadProducts() {
+      try {
+        const res = await fetch('/api/products');
+        const data = await res.json();
+        products = data.data || [];
+        populateProductSelect();
+      } catch (error) {
+        console.error('Error loading products:', error);
+      }
+    }
+
+    function populateProductSelect() {
+      const select = document.getElementById('productSelect');
+      select.innerHTML = '<option value="">-- Select Product --</option>' +
+        products.map(p => `<option value="${p.id}" data-price="${p.price}">${p.name} - $${parseFloat(p.price).toFixed(2)}</option>`).join('');
+    }
+
+    function updatePrice() {
+      const select = document.getElementById('productSelect');
+      const price = select.options[select.selectedIndex]?.dataset.price || '0';
+      document.getElementById('selectedPrice').value = '$' + parseFloat(price).toFixed(2);
+    }
+
+    function renderCart() {
+      const tbody = document.getElementById('cartTable');
+      const emptyCart = document.getElementById('emptyCart');
+      
+      if (cartItems.length === 0) {
+        tbody.parentElement.parentElement.style.display = 'none';
+        emptyCart.style.display = 'block';
+        return;
+      }
+      
+      tbody.parentElement.parentElement.style.display = 'block';
+      emptyCart.style.display = 'none';
+      
+      tbody.innerHTML = cartItems.map(item => {
+        const subtotal = item.price * item.quantity;
+        return `
+          <tr>
+            <td><strong>${item.name}</strong></td>
+            <td>$${parseFloat(item.price).toFixed(2)}</td>
+            <td>${item.quantity}</td>
+            <td><strong>$${subtotal.toFixed(2)}</strong></td>
+            <td>
+              <div class="btn-group">
+                <button class="btn btn-primary btn-sm" onclick="editItem(${item.id})">✏️</button>
+                <button class="btn btn-success btn-sm" onclick="increaseQty(${item.id})">➕</button>
+                <button class="btn btn-warning btn-sm" onclick="decreaseQty(${item.id})">➖</button>
+                <button class="btn btn-danger btn-sm" onclick="removeItem(${item.id})">🗑️</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function updateStats() {
+      const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+      const totalPrice = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+      const uniqueProducts = cartItems.length;
+      const avgPrice = uniqueProducts > 0 ? totalPrice / totalItems : 0;
+      
+      document.getElementById('totalItems').textContent = totalItems;
+      document.getElementById('totalPrice').textContent = '$' + totalPrice.toFixed(2);
+      document.getElementById('uniqueProducts').textContent = uniqueProducts;
+      document.getElementById('avgPrice').textContent = '$' + avgPrice.toFixed(2);
+      document.getElementById('checkoutTotal').textContent = '$' + totalPrice.toFixed(2);
+    }
+
+    function openAddModal() {
+      document.getElementById('addForm').reset();
+      document.getElementById('selectedPrice').value = '';
+      document.getElementById('addModal').classList.add('active');
+    }
+
+    function closeAddModal() {
+      document.getElementById('addModal').classList.remove('active');
+    }
+
+    async function addToCart(e) {
+      e.preventDefault();
+      
+      const productId = document.getElementById('productSelect').value;
+      const quantity = parseInt(document.getElementById('quantity').value);
+      
+      const product = products.find(p => p.id == productId);
+      if (!product) return;
+      
+      try {
+        const res = await fetch('/api/cart', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            product_id: product.id,
+            quantity: quantity
+          })
+        });
+        
+        if (res.ok) {
+          closeAddModal();
+          loadCart();
+        }
+      } catch (error) {
+        console.error('Error adding to cart:', error);
+        alert('Failed to add item to cart');
+      }
+    }
+
+    function editItem(id) {
+      const item = cartItems.find(i => i.id === id);
+      if (!item) return;
+      
+      editingItemId = id;
+      document.getElementById('editProductName').value = item.name;
+      document.getElementById('editQuantity').value = item.quantity;
+      document.getElementById('editModal').classList.add('active');
+    }
+
+    function closeEditModal() {
+      document.getElementById('editModal').classList.remove('active');
+      editingItemId = null;
+    }
+
+    async function updateCartItem(e) {
+      e.preventDefault();
+      
+      const quantity = parseInt(document.getElementById('editQuantity').value);
+      
+      try {
+        const res = await fetch(`/api/cart/${editingItemId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ quantity })
+        });
+        
+        if (res.ok) {
+          closeEditModal();
+          loadCart();
+        }
+      } catch (error) {
+        console.error('Error updating cart item:', error);
+        alert('Failed to update item');
+      }
+    }
+
+    async function removeItem(id) {
+      if (!confirm('Remove this item from cart?')) return;
+      
+      try {
+        const res = await fetch(`/api/cart/${id}`, { method: 'DELETE' });
+        if (res.ok) {
+          loadCart();
+        }
+      } catch (error) {
+        console.error('Error removing item:', error);
+        alert('Failed to remove item');
+      }
+    }
+
+    async function increaseQty(id) {
+      const item = cartItems.find(i => i.id === id);
+      if (!item) return;
+      
+      try {
+        const res = await fetch(`/api/cart/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ quantity: item.quantity + 1 })
+        });
+        
+        if (res.ok) loadCart();
+      } catch (error) {
+        console.error('Error updating quantity:', error);
+      }
+    }
+
+    async function decreaseQty(id) {
+      const item = cartItems.find(i => i.id === id);
+      if (!item || item.quantity <= 1) return;
+      
+      try {
+        const res = await fetch(`/api/cart/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ quantity: item.quantity - 1 })
+        });
+        
+        if (res.ok) loadCart();
+      } catch (error) {
+        console.error('Error updating quantity:', error);
+      }
+    }
+
+    async function clearCart() {
+      if (!confirm('Clear all items from cart?')) return;
+      
+      for (const item of cartItems) {
+        await fetch(`/api/cart/${item.id}`, { method: 'DELETE' });
+      }
+      loadCart();
+    }
+
+    function checkout() {
+      if (cartItems.length === 0) {
+        alert('Your cart is empty!');
+        return;
+      }
+      alert('Checkout feature - Process payment and create order');
+    }
+
+    loadCart();
+    loadProducts();
+  </script>
 </body>
 </html>

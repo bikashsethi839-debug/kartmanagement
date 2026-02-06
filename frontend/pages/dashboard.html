@@ -1,24 +1,397 @@
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta charset="utf-8">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard - Kart Management</title>
   <link rel="stylesheet" href="/assets/css/style.css">
 </head>
 <body>
   <nav>
-    <a href="/catalog.html">Catalog</a> |
-    <a href="/dashboard.html">Dashboard</a> |
-    <a href="/inventory.html">Inventory</a> |
-    <a href="/product.html">Product</a> |
-    <a href="/cart.html">Cart</a>
+    <div class="nav-container">
+      <a href="/" class="nav-brand">🛒 Kart Management</a>
+      <div class="nav-links">
+        <a href="/catalog.html">📦 Catalog</a>
+        <a href="/inventory.html">📊 Inventory</a>
+        <a href="/cart.html">🛍️ Cart</a>
+        <a href="/dashboard.html" class="active">📈 Dashboard</a>
+      </div>
+    </div>
   </nav>
 
   <main>
-    <h1>Management Dashboard</h1>
-    <div id="dashboard-table"></div>
+    <div class="page-header">
+      <h1>📈 Dashboard</h1>
+      <button class="btn btn-primary" onclick="refreshData()">🔄 Refresh</button>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon primary">📦</div>
+        <div class="stat-info">
+          <h3>Total Products</h3>
+          <p id="totalProducts">0</p>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon success">💰</div>
+        <div class="stat-info">
+          <h3>Total Value</h3>
+          <p id="totalValue">$0</p>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon warning">🛍️</div>
+        <div class="stat-info">
+          <h3>Cart Items</h3>
+          <p id="cartItems">0</p>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon danger">⚠️</div>
+        <div class="stat-info">
+          <h3>Low Stock</h3>
+          <p id="lowStock">0</p>
+        </div>
+      </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 2rem;">
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">📊 Recent Products</h3>
+          <button class="btn btn-primary btn-sm" onclick="window.location.href='/catalog.html'">View All</button>
+        </div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Price</th>
+                <th>Stock</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="recentProducts"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">🛍️ Cart Summary</h3>
+          <button class="btn btn-primary btn-sm" onclick="window.location.href='/cart.html'">View Cart</button>
+        </div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Product</th>
+                <th>Qty</th>
+                <th>Total</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="cartSummary"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top: 1.5rem;">
+      <div class="card-header">
+        <h3 class="card-title">⚠️ Low Stock Alert</h3>
+        <button class="btn btn-warning btn-sm" onclick="window.location.href='/inventory.html'">Manage Inventory</button>
+      </div>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Product</th>
+              <th>SKU</th>
+              <th>Current Stock</th>
+              <th>Price</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="lowStockTable"></tbody>
+        </table>
+      </div>
+      <div id="noLowStock" class="empty-state" style="display:none;">
+        <div class="empty-state-icon">✅</div>
+        <h3>All products are well stocked!</h3>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top: 1.5rem;">
+      <div class="card-header">
+        <h3 class="card-title">🎯 Quick Actions</h3>
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-primary" onclick="quickAddProduct()">➕ Add Product</button>
+        <button class="btn btn-success" onclick="quickAddToCart()">🛍️ Add to Cart</button>
+        <button class="btn btn-warning" onclick="bulkStockUpdate()">📦 Bulk Stock Update</button>
+        <button class="btn btn-danger" onclick="clearAllData()">🗑️ Clear All Data</button>
+      </div>
+    </div>
   </main>
+
+  <!-- Quick Add Product Modal -->
+  <div id="productModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Quick Add Product</h2>
+        <button class="close-btn" onclick="closeProductModal()">✕</button>
+      </div>
+      <form id="productForm" onsubmit="saveProduct(event)">
+        <div class="form-group">
+          <label>Product Name *</label>
+          <input type="text" id="productName" required>
+        </div>
+        <div class="form-group">
+          <label>Price *</label>
+          <input type="number" id="productPrice" step="0.01" required>
+        </div>
+        <div class="form-group">
+          <label>Stock *</label>
+          <input type="number" id="productStock" required>
+        </div>
+        <div class="btn-group">
+          <button type="submit" class="btn btn-success">💾 Save</button>
+          <button type="button" class="btn btn-secondary" onclick="closeProductModal()">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <script src="/assets/js/app.js"></script>
-  <script src="/assets/js/controllers/dashboard_controller.js"></script>
+  <script>
+    let products = [];
+    let cartItems = [];
+
+    async function loadDashboard() {
+      await Promise.all([loadProducts(), loadCart()]);
+      updateStats();
+      renderRecentProducts();
+      renderCartSummary();
+      renderLowStock();
+    }
+
+    async function loadProducts() {
+      try {
+        const res = await fetch('/api/products');
+        const data = await res.json();
+        products = data.data || [];
+      } catch (error) {
+        console.error('Error loading products:', error);
+      }
+    }
+
+    async function loadCart() {
+      try {
+        const res = await fetch('/api/cart');
+        const data = await res.json();
+        cartItems = data.data || [];
+      } catch (error) {
+        console.error('Error loading cart:', error);
+      }
+    }
+
+    function updateStats() {
+      const totalValue = products.reduce((sum, p) => sum + (p.price * p.stock), 0);
+      const lowStockCount = products.filter(p => p.stock <= 10).length;
+      const totalCartItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+      
+      document.getElementById('totalProducts').textContent = products.length;
+      document.getElementById('totalValue').textContent = '$' + totalValue.toFixed(2);
+      document.getElementById('cartItems').textContent = totalCartItems;
+      document.getElementById('lowStock').textContent = lowStockCount;
+    }
+
+    function renderRecentProducts() {
+      const tbody = document.getElementById('recentProducts');
+      const recent = products.slice(0, 5);
+      
+      tbody.innerHTML = recent.map(p => `
+        <tr>
+          <td><strong>${p.name}</strong></td>
+          <td>$${parseFloat(p.price).toFixed(2)}</td>
+          <td>${p.stock}</td>
+          <td>
+            <button class="btn btn-primary btn-sm" onclick="editProduct(${p.id})">✏️</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteProduct(${p.id})">🗑️</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function renderCartSummary() {
+      const tbody = document.getElementById('cartSummary');
+      const summary = cartItems.slice(0, 5);
+      
+      tbody.innerHTML = summary.map(item => `
+        <tr>
+          <td><strong>${item.name}</strong></td>
+          <td>${item.quantity}</td>
+          <td>$${(item.price * item.quantity).toFixed(2)}</td>
+          <td>
+            <button class="btn btn-danger btn-sm" onclick="removeFromCart(${item.id})">🗑️</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function renderLowStock() {
+      const tbody = document.getElementById('lowStockTable');
+      const noLowStock = document.getElementById('noLowStock');
+      const lowStockItems = products.filter(p => p.stock <= 10);
+      
+      if (lowStockItems.length === 0) {
+        tbody.parentElement.parentElement.style.display = 'none';
+        noLowStock.style.display = 'block';
+        return;
+      }
+      
+      tbody.parentElement.parentElement.style.display = 'block';
+      noLowStock.style.display = 'none';
+      
+      tbody.innerHTML = lowStockItems.map(p => {
+        const status = p.stock === 0 ? 'Out of Stock' : 'Low Stock';
+        const badgeClass = p.stock === 0 ? 'badge-danger' : 'badge-warning';
+        
+        return `
+          <tr>
+            <td><strong>${p.name}</strong></td>
+            <td>${p.sku || 'N/A'}</td>
+            <td>${p.stock}</td>
+            <td>$${parseFloat(p.price).toFixed(2)}</td>
+            <td><span class="badge ${badgeClass}">${status}</span></td>
+            <td>
+              <button class="btn btn-success btn-sm" onclick="restockProduct(${p.id})">📦 Restock</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function quickAddProduct() {
+      document.getElementById('productForm').reset();
+      document.getElementById('productModal').classList.add('active');
+    }
+
+    function closeProductModal() {
+      document.getElementById('productModal').classList.remove('active');
+    }
+
+    async function saveProduct(e) {
+      e.preventDefault();
+      
+      const data = {
+        name: document.getElementById('productName').value,
+        price: parseFloat(document.getElementById('productPrice').value),
+        stock: parseInt(document.getElementById('productStock').value),
+        sku: '',
+        description: ''
+      };
+      
+      try {
+        const res = await fetch('/api/products', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        
+        if (res.ok) {
+          closeProductModal();
+          refreshData();
+        }
+      } catch (error) {
+        console.error('Error saving product:', error);
+        alert('Failed to save product');
+      }
+    }
+
+    async function editProduct(id) {
+      window.location.href = `/catalog.html`;
+    }
+
+    async function deleteProduct(id) {
+      if (!confirm('Delete this product?')) return;
+      
+      try {
+        const res = await fetch(`/api/products/${id}`, { method: 'DELETE' });
+        if (res.ok) refreshData();
+      } catch (error) {
+        console.error('Error deleting product:', error);
+      }
+    }
+
+    async function removeFromCart(id) {
+      if (!confirm('Remove from cart?')) return;
+      
+      try {
+        const res = await fetch(`/api/cart/${id}`, { method: 'DELETE' });
+        if (res.ok) refreshData();
+      } catch (error) {
+        console.error('Error removing from cart:', error);
+      }
+    }
+
+    function restockProduct(id) {
+      const product = products.find(p => p.id === id);
+      if (!product) return;
+      
+      const newStock = prompt(`Restock ${product.name}\nCurrent: ${product.stock}`, 50);
+      if (newStock === null) return;
+      
+      updateStock(id, parseInt(newStock));
+    }
+
+    async function updateStock(id, stock) {
+      const product = products.find(p => p.id === id);
+      if (!product) return;
+      
+      try {
+        const res = await fetch(`/api/products/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...product, stock })
+        });
+        
+        if (res.ok) refreshData();
+      } catch (error) {
+        console.error('Error updating stock:', error);
+      }
+    }
+
+    function quickAddToCart() {
+      window.location.href = '/cart.html';
+    }
+
+    function bulkStockUpdate() {
+      alert('Bulk stock update feature - Update multiple products at once');
+    }
+
+    async function clearAllData() {
+      if (!confirm('WARNING: This will delete ALL products and cart items. Continue?')) return;
+      
+      for (const item of cartItems) {
+        await fetch(`/api/cart/${item.id}`, { method: 'DELETE' });
+      }
+      
+      for (const product of products) {
+        await fetch(`/api/products/${product.id}`, { method: 'DELETE' });
+      }
+      
+      refreshData();
+    }
+
+    function refreshData() {
+      loadDashboard();
+    }
+
+    loadDashboard();
+  </script>
 </body>
 </html>

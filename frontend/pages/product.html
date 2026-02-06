@@ -1,24 +1,442 @@
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta charset="utf-8">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Product Details - Kart Management</title>
   <link rel="stylesheet" href="/assets/css/style.css">
 </head>
 <body>
   <nav>
-    <a href="/catalog.html">Catalog</a> |
-    <a href="/dashboard.html">Dashboard</a> |
-    <a href="/inventory.html">Inventory</a> |
-    <a href="/product.html">Product</a> |
-    <a href="/cart.html">Cart</a>
+    <div class="nav-container">
+      <a href="/" class="nav-brand">🛒 Kart Management</a>
+      <div class="nav-links">
+        <a href="/catalog.html">📦 Catalog</a>
+        <a href="/inventory.html">📊 Inventory</a>
+        <a href="/cart.html">🛍️ Cart</a>
+        <a href="/dashboard.html">📈 Dashboard</a>
+      </div>
+    </div>
   </nav>
 
   <main>
-    <h1>Product Details & Editor</h1>
-    <div id="product-detail"></div>
+    <div class="page-header">
+      <h1>📦 Product Details</h1>
+      <div class="btn-group">
+        <button class="btn btn-secondary" onclick="window.history.back()">← Back</button>
+        <button class="btn btn-primary" onclick="editProduct()">✏️ Edit</button>
+        <button class="btn btn-danger" onclick="deleteProduct()">🗑️ Delete</button>
+      </div>
+    </div>
+
+    <div id="productDetails" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">Product Information</h3>
+          <span id="stockBadge" class="badge"></span>
+        </div>
+        <div class="card-body">
+          <div style="margin-bottom: 1rem;">
+            <label style="color: var(--text-muted);">Product Name</label>
+            <h2 id="productName" style="color: var(--primary); margin-top: 0.5rem;"></h2>
+          </div>
+          <div style="margin-bottom: 1rem;">
+            <label style="color: var(--text-muted);">SKU</label>
+            <p id="productSku" style="font-size: 1.1rem;"></p>
+          </div>
+          <div style="margin-bottom: 1rem;">
+            <label style="color: var(--text-muted);">Price</label>
+            <p id="productPrice" style="font-size: 1.5rem; font-weight: 700; color: var(--success);"></p>
+          </div>
+          <div style="margin-bottom: 1rem;">
+            <label style="color: var(--text-muted);">Stock Quantity</label>
+            <p id="productStock" style="font-size: 1.5rem; font-weight: 700;"></p>
+          </div>
+          <div>
+            <label style="color: var(--text-muted);">Description</label>
+            <p id="productDescription" style="margin-top: 0.5rem;"></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">Quick Actions</h3>
+        </div>
+        <div class="card-body">
+          <div class="form-group">
+            <label>Add to Cart</label>
+            <div style="display: flex; gap: 0.5rem;">
+              <input type="number" id="cartQuantity" value="1" min="1" style="flex: 1;">
+              <button class="btn btn-success" onclick="addToCart()">🛍️ Add</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Adjust Stock</label>
+            <div style="display: flex; gap: 0.5rem;">
+              <input type="number" id="newStock" min="0" style="flex: 1;">
+              <button class="btn btn-warning" onclick="updateStock()">📦 Update</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Update Price</label>
+            <div style="display: flex; gap: 0.5rem;">
+              <input type="number" id="newPrice" step="0.01" min="0" style="flex: 1;">
+              <button class="btn btn-primary" onclick="updatePrice()">💰 Update</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top: 1.5rem;">
+      <div class="card-header">
+        <h3 class="card-title">⭐ Product Reviews</h3>
+        <button class="btn btn-primary btn-sm" onclick="openReviewModal()">➕ Add Review</button>
+      </div>
+      <div id="reviewsList"></div>
+      <div id="noReviews" class="empty-state" style="display:none;">
+        <div class="empty-state-icon">⭐</div>
+        <h3>No reviews yet</h3>
+        <p>Be the first to review this product</p>
+      </div>
+    </div>
   </main>
+
+  <!-- Edit Product Modal -->
+  <div id="editModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Edit Product</h2>
+        <button class="close-btn" onclick="closeEditModal()">✕</button>
+      </div>
+      <form id="editForm" onsubmit="saveProduct(event)">
+        <div class="form-group">
+          <label>Product Name *</label>
+          <input type="text" id="editName" required>
+        </div>
+        <div class="form-group">
+          <label>SKU</label>
+          <input type="text" id="editSku">
+        </div>
+        <div class="form-group">
+          <label>Price *</label>
+          <input type="number" id="editPrice" step="0.01" required>
+        </div>
+        <div class="form-group">
+          <label>Stock *</label>
+          <input type="number" id="editStock" required>
+        </div>
+        <div class="form-group">
+          <label>Description</label>
+          <textarea id="editDescription"></textarea>
+        </div>
+        <div class="btn-group">
+          <button type="submit" class="btn btn-success">💾 Save</button>
+          <button type="button" class="btn btn-secondary" onclick="closeEditModal()">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Add Review Modal -->
+  <div id="reviewModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Add Review</h2>
+        <button class="close-btn" onclick="closeReviewModal()">✕</button>
+      </div>
+      <form id="reviewForm" onsubmit="saveReview(event)">
+        <div class="form-group">
+          <label>Rating *</label>
+          <select id="reviewRating" required>
+            <option value="5">⭐⭐⭐⭐⭐ (5 stars)</option>
+            <option value="4">⭐⭐⭐⭐ (4 stars)</option>
+            <option value="3">⭐⭐⭐ (3 stars)</option>
+            <option value="2">⭐⭐ (2 stars)</option>
+            <option value="1">⭐ (1 star)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Review *</label>
+          <textarea id="reviewText" required></textarea>
+        </div>
+        <div class="form-group">
+          <label>Your Name</label>
+          <input type="text" id="reviewAuthor" value="Anonymous">
+        </div>
+        <div class="btn-group">
+          <button type="submit" class="btn btn-success">💾 Submit</button>
+          <button type="button" class="btn btn-secondary" onclick="closeReviewModal()">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <script src="/assets/js/app.js"></script>
-  <script src="/assets/js/controllers/product_detail_controller.js"></script>
+  <script>
+    let product = null;
+    let productId = null;
+    let reviews = [];
+
+    function getProductId() {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('id');
+    }
+
+    async function loadProduct() {
+      productId = getProductId();
+      if (!productId) {
+        alert('No product ID specified');
+        window.location.href = '/catalog.html';
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/products/${productId}`);
+        const data = await res.json();
+        product = data.data;
+        renderProduct();
+        loadReviews();
+      } catch (error) {
+        console.error('Error loading product:', error);
+        alert('Product not found');
+        window.location.href = '/catalog.html';
+      }
+    }
+
+    function renderProduct() {
+      if (!product) return;
+
+      document.getElementById('productName').textContent = product.name;
+      document.getElementById('productSku').textContent = product.sku || 'N/A';
+      document.getElementById('productPrice').textContent = '$' + parseFloat(product.price).toFixed(2);
+      document.getElementById('productStock').textContent = product.stock;
+      document.getElementById('productDescription').textContent = product.description || 'No description available';
+      
+      document.getElementById('newStock').value = product.stock;
+      document.getElementById('newPrice').value = product.price;
+
+      const badge = document.getElementById('stockBadge');
+      if (product.stock === 0) {
+        badge.className = 'badge badge-danger';
+        badge.textContent = 'Out of Stock';
+      } else if (product.stock <= 10) {
+        badge.className = 'badge badge-warning';
+        badge.textContent = 'Low Stock';
+      } else {
+        badge.className = 'badge badge-success';
+        badge.textContent = 'In Stock';
+      }
+    }
+
+    async function loadReviews() {
+      try {
+        const res = await fetch(`/api/products/${productId}/reviews`);
+        const data = await res.json();
+        reviews = data.data || [];
+        renderReviews();
+      } catch (error) {
+        console.error('Error loading reviews:', error);
+      }
+    }
+
+    function renderReviews() {
+      const container = document.getElementById('reviewsList');
+      const noReviews = document.getElementById('noReviews');
+
+      if (reviews.length === 0) {
+        container.style.display = 'none';
+        noReviews.style.display = 'block';
+        return;
+      }
+
+      container.style.display = 'block';
+      noReviews.style.display = 'none';
+
+      container.innerHTML = reviews.map(r => `
+        <div style="padding: 1rem; border-bottom: 1px solid var(--border);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+            <div>
+              <strong>${r.author || 'Anonymous'}</strong>
+              <span style="margin-left: 1rem;">${'⭐'.repeat(r.rating)}</span>
+            </div>
+            <button class="btn btn-danger btn-sm" onclick="deleteReview(${r.id})">🗑️</button>
+          </div>
+          <p style="color: var(--text-muted);">${r.comment}</p>
+        </div>
+      `).join('');
+    }
+
+    function editProduct() {
+      document.getElementById('editName').value = product.name;
+      document.getElementById('editSku').value = product.sku || '';
+      document.getElementById('editPrice').value = product.price;
+      document.getElementById('editStock').value = product.stock;
+      document.getElementById('editDescription').value = product.description || '';
+      document.getElementById('editModal').classList.add('active');
+    }
+
+    function closeEditModal() {
+      document.getElementById('editModal').classList.remove('active');
+    }
+
+    async function saveProduct(e) {
+      e.preventDefault();
+
+      const data = {
+        name: document.getElementById('editName').value,
+        sku: document.getElementById('editSku').value,
+        price: parseFloat(document.getElementById('editPrice').value),
+        stock: parseInt(document.getElementById('editStock').value),
+        description: document.getElementById('editDescription').value
+      };
+
+      try {
+        const res = await fetch(`/api/products/${productId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+
+        if (res.ok) {
+          closeEditModal();
+          loadProduct();
+        }
+      } catch (error) {
+        console.error('Error saving product:', error);
+        alert('Failed to save product');
+      }
+    }
+
+    async function deleteProduct() {
+      if (!confirm('Delete this product permanently?')) return;
+
+      try {
+        const res = await fetch(`/api/products/${productId}`, { method: 'DELETE' });
+        if (res.ok) {
+          window.location.href = '/catalog.html';
+        }
+      } catch (error) {
+        console.error('Error deleting product:', error);
+        alert('Failed to delete product');
+      }
+    }
+
+    async function addToCart() {
+      const quantity = parseInt(document.getElementById('cartQuantity').value);
+
+      try {
+        const res = await fetch('/api/cart', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            product_id: productId,
+            quantity: quantity
+          })
+        });
+
+        if (res.ok) {
+          alert('Added to cart!');
+          document.getElementById('cartQuantity').value = 1;
+        }
+      } catch (error) {
+        console.error('Error adding to cart:', error);
+        alert('Failed to add to cart');
+      }
+    }
+
+    async function updateStock() {
+      const newStock = parseInt(document.getElementById('newStock').value);
+
+      try {
+        const res = await fetch(`/api/products/${productId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...product, stock: newStock })
+        });
+
+        if (res.ok) {
+          loadProduct();
+        }
+      } catch (error) {
+        console.error('Error updating stock:', error);
+        alert('Failed to update stock');
+      }
+    }
+
+    async function updatePrice() {
+      const newPrice = parseFloat(document.getElementById('newPrice').value);
+
+      try {
+        const res = await fetch(`/api/products/${productId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...product, price: newPrice })
+        });
+
+        if (res.ok) {
+          loadProduct();
+        }
+      } catch (error) {
+        console.error('Error updating price:', error);
+        alert('Failed to update price');
+      }
+    }
+
+    function openReviewModal() {
+      document.getElementById('reviewForm').reset();
+      document.getElementById('reviewModal').classList.add('active');
+    }
+
+    function closeReviewModal() {
+      document.getElementById('reviewModal').classList.remove('active');
+    }
+
+    async function saveReview(e) {
+      e.preventDefault();
+
+      const data = {
+        rating: parseInt(document.getElementById('reviewRating').value),
+        comment: document.getElementById('reviewText').value,
+        author: document.getElementById('reviewAuthor').value
+      };
+
+      try {
+        const res = await fetch(`/api/products/${productId}/reviews`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+
+        if (res.ok) {
+          closeReviewModal();
+          loadReviews();
+        }
+      } catch (error) {
+        console.error('Error saving review:', error);
+        alert('Failed to save review');
+      }
+    }
+
+    async function deleteReview(reviewId) {
+      if (!confirm('Delete this review?')) return;
+
+      try {
+        const res = await fetch(`/api/products/${productId}/reviews/${reviewId}`, {
+          method: 'DELETE'
+        });
+
+        if (res.ok) {
+          loadReviews();
+        }
+      } catch (error) {
+        console.error('Error deleting review:', error);
+        alert('Failed to delete review');
+      }
+    }
+
+    loadProduct();
+  </script>
 </body>
 </html>
