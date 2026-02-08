@@ -1,17 +1,18 @@
 :root {
-  --primary: #6366f1;
-  --primary-dark: #4f46e5;
-  --secondary: #8b5cf6;
+  --primary: #ff6b35;
+  --primary-dark: #e85d2c;
+  --secondary: #f7931e;
   --success: #10b981;
   --danger: #ef4444;
   --warning: #f59e0b;
-  --dark: #1e293b;
-  --dark-light: #334155;
+  --dark: #1a1a2e;
+  --dark-light: #16213e;
   --light: #f1f5f9;
   --text: #e2e8f0;
   --text-muted: #94a3b8;
-  --border: #475569;
+  --border: #0f3460;
   --shadow: rgba(0, 0, 0, 0.3);
+  --accent: #e94560;
 }
 
 * {
@@ -22,7 +23,7 @@
 
 body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
   color: var(--text);
   line-height: 1.6;
   min-height: 100vh;
@@ -30,10 +31,10 @@ body {
 
 /* Navigation */
 nav {
-  background: rgba(30, 41, 59, 0.95);
+  background: linear-gradient(90deg, #1a1a2e 0%, #16213e 100%);
   backdrop-filter: blur(10px);
   padding: 1rem 0;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 2px solid var(--primary);
   position: sticky;
   top: 0;
   z-index: 100;
@@ -52,7 +53,10 @@ nav {
 .nav-brand {
   font-size: 1.5rem;
   font-weight: 700;
-  color: var(--primary);
+  background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   text-decoration: none;
   display: flex;
   align-items: center;
@@ -69,15 +73,19 @@ nav {
   color: var(--text);
   text-decoration: none;
   padding: 0.5rem 1rem;
-  border-radius: 6px;
+  border-radius: 8px;
   transition: all 0.3s;
   font-weight: 500;
+  border: 1px solid transparent;
 }
 
 .nav-links a:hover,
 .nav-links a.active {
-  background: var(--primary);
+  background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
   color: white;
+  border-color: var(--primary);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
 }
 
 /* Main Container */
@@ -99,7 +107,10 @@ main {
 
 .page-header h1 {
   font-size: 2rem;
-  color: var(--primary);
+  background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -107,7 +118,7 @@ main {
 
 /* Cards */
 .card {
-  background: var(--dark-light);
+  background: linear-gradient(135deg, var(--dark-light) 0%, var(--dark) 100%);
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 1.5rem;
@@ -117,7 +128,7 @@ main {
 
 .card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 8px 16px var(--shadow);
+  box-shadow: 0 8px 16px rgba(255, 107, 53, 0.2);
   border-color: var(--primary);
 }
 
@@ -166,39 +177,40 @@ button, .btn {
 }
 
 .btn-primary {
-  background: var(--primary);
+  background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+  box-shadow: 0 2px 8px rgba(255, 107, 53, 0.3);
 }
 
 .btn-primary:hover {
-  background: var(--primary-dark);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+  box-shadow: 0 4px 12px rgba(255, 107, 53, 0.5);
 }
 
 .btn-success {
-  background: var(--success);
+  background: linear-gradient(135deg, var(--success) 0%, #059669 100%);
 }
 
 .btn-success:hover {
-  background: #059669;
   transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
 }
 
 .btn-danger {
-  background: var(--danger);
+  background: linear-gradient(135deg, var(--danger) 0%, #dc2626 100%);
 }
 
 .btn-danger:hover {
-  background: #dc2626;
   transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
 }
 
 .btn-warning {
-  background: var(--warning);
+  background: linear-gradient(135deg, var(--warning) 0%, #d97706 100%);
 }
 
 .btn-warning:hover {
-  background: #d97706;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
 }
 
 .btn-secondary {
@@ -208,6 +220,7 @@ button, .btn {
 
 .btn-secondary:hover {
   background: var(--border);
+  border-color: var(--primary);
 }
 
 .btn-sm {
@@ -248,7 +261,7 @@ input, select, textarea {
 input:focus, select:focus, textarea:focus {
   outline: none;
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+  box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
 }
 
 textarea {
@@ -315,7 +328,7 @@ tbody tr:hover {
 }
 
 .modal-content {
-  background: var(--dark-light);
+  background: linear-gradient(135deg, var(--dark-light) 0%, var(--dark) 100%);
   padding: 2rem;
   border-radius: 16px;
   max-width: 600px;
@@ -336,7 +349,10 @@ tbody tr:hover {
 }
 
 .modal-header h2 {
-  color: var(--primary);
+  background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
   font-size: 1.5rem;
 }
 
@@ -377,6 +393,13 @@ tbody tr:hover {
   display: flex;
   align-items: center;
   gap: 1rem;
+  transition: all 0.3s;
+}
+
+.stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 16px rgba(255, 107, 53, 0.2);
+  border-color: var(--primary);
 }
 
 .stat-icon {
@@ -389,7 +412,7 @@ tbody tr:hover {
   font-size: 1.5rem;
 }
 
-.stat-icon.primary { background: rgba(99, 102, 241, 0.2); color: var(--primary); }
+.stat-icon.primary { background: rgba(255, 107, 53, 0.2); color: var(--primary); }
 .stat-icon.success { background: rgba(16, 185, 129, 0.2); color: var(--success); }
 .stat-icon.warning { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
 .stat-icon.danger { background: rgba(239, 68, 68, 0.2); color: var(--danger); }
@@ -418,7 +441,7 @@ tbody tr:hover {
 .badge-success { background: rgba(16, 185, 129, 0.2); color: var(--success); }
 .badge-danger { background: rgba(239, 68, 68, 0.2); color: var(--danger); }
 .badge-warning { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
-.badge-primary { background: rgba(99, 102, 241, 0.2); color: var(--primary); }
+.badge-primary { background: rgba(255, 107, 53, 0.2); color: var(--primary); }
 
 /* Search Bar */
 .search-bar {
@@ -464,6 +487,12 @@ tbody tr:hover {
 
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+/* Currency Symbol */
+.currency::before {
+  content: '₹';
+  margin-right: 0.2rem;
 }
 
 /* Responsive */

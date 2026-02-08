@@ -340,28 +340,59 @@
 
     function restockProduct(id) {
       const product = products.find(p => p.id === id);
-      if (!product) return;
+      if (!product) {
+        alert('Product not found');
+        return;
+      }
       
-      const newStock = prompt(`Restock ${product.name}\nCurrent: ${product.stock}`, 50);
-      if (newStock === null) return;
+      const newStock = prompt(`Restock ${product.name}\nCurrent Stock: ${product.stock}\nEnter new stock quantity:`, 50);
+      if (newStock === null || newStock === '') return;
       
-      updateStock(id, parseInt(newStock));
+      const stockValue = parseInt(newStock);
+      if (isNaN(stockValue) || stockValue < 0) {
+        alert('Please enter a valid stock quantity');
+        return;
+      }
+      
+      updateStock(id, stockValue);
     }
 
     async function updateStock(id, stock) {
       const product = products.find(p => p.id === id);
-      if (!product) return;
+      if (!product) {
+        alert('Product not found');
+        return;
+      }
+      
+      const updateData = {
+        name: product.name,
+        sku: product.sku || '',
+        price: parseFloat(product.price),
+        stock: parseInt(stock),
+        description: product.description || ''
+      };
+      
+      console.log('Updating product:', id, updateData);
       
       try {
         const res = await fetch(`/api/products/${id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...product, stock })
+          body: JSON.stringify(updateData)
         });
         
-        if (res.ok) refreshData();
+        const result = await res.json();
+        console.log('Update response:', result);
+        
+        if (res.ok && result.status === 'ok') {
+          alert(`Stock updated successfully! New stock: ${stock}`);
+          await refreshData();
+        } else {
+          alert('Failed to update stock: ' + (result.message || 'Unknown error'));
+        }
       } catch (error) {
         console.error('Error updating stock:', error);
+        alert('Error updating stock: ' + error.message);
       }
     }
 
@@ -388,7 +419,7 @@
     }
 
     function refreshData() {
-      loadDashboard();
+      return loadDashboard();
     }
 
     loadDashboard();
