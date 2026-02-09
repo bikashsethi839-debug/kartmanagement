@@ -14,6 +14,7 @@
         <a href="/catalog.html">📦 Catalog</a>
         <a href="/inventory.html">📊 Inventory</a>
         <a href="/cart.html" class="active">🛍️ Cart</a>
+        <a href="/customers.html">👥 Customers</a>
         <a href="/dashboard.html">📈 Dashboard</a>
       </div>
     </div>
@@ -22,11 +23,64 @@
   <main>
     <div class="page-header">
       <h1>🛍️ Shopping Cart</h1>
-      <div class="btn-group">
-        <button class="btn btn-primary" onclick="openAddModal()">➕ Add Item</button>
-        <button class="btn btn-danger" onclick="clearCart()">🗑️ Clear Cart</button>
+    </div>
+
+    <div class="card" style="margin-bottom: 2rem;">
+      <div class="card-header">
+        <h3 class="card-title">👤 Step 1: Select Customer</h3>
+        <button class="btn btn-primary btn-sm" onclick="toggleCustomerForm()">➕ Add New Customer</button>
+      </div>
+      <div class="card-body">
+        <div id="customerSelection">
+          <div class="form-group">
+            <label>Select Customer *</label>
+            <select id="customerSelect" onchange="loadCustomerDetails()">
+              <option value="">-- Select Customer --</option>
+            </select>
+          </div>
+          <div id="selectedCustomerInfo" style="display:none; padding: 1rem; background: var(--dark); border-radius: 8px; margin-top: 1rem;">
+            <p><strong>Name:</strong> <span id="custName"></span></p>
+            <p><strong>Email:</strong> <span id="custEmail"></span></p>
+            <p><strong>Phone:</strong> <span id="custPhone"></span></p>
+            <p><strong>Address:</strong> <span id="custAddress"></span></p>
+          </div>
+        </div>
+        
+        <div id="newCustomerForm" style="display:none; margin-top: 1rem;">
+          <div class="form-group">
+            <label>Name *</label>
+            <input type="text" id="newCustName" required>
+          </div>
+          <div class="form-group">
+            <label>Email *</label>
+            <input type="email" id="newCustEmail" required>
+          </div>
+          <div class="form-group">
+            <label>Phone *</label>
+            <input type="tel" id="newCustPhone" required>
+          </div>
+          <div class="form-group">
+            <label>Address *</label>
+            <textarea id="newCustAddress" required></textarea>
+          </div>
+          <div class="btn-group">
+            <button class="btn btn-success" onclick="saveNewCustomer()">💾 Save Customer</button>
+            <button class="btn btn-secondary" onclick="toggleCustomerForm()">Cancel</button>
+          </div>
+        </div>
       </div>
     </div>
+
+    <div id="cartSection" style="display:none;">
+      <div class="page-header">
+        <h3>📦 Step 2: Add Products</h3>
+        <div class="btn-group">
+          <button class="btn btn-primary" onclick="openAddModal()">➕ Add Item</button>
+          <button class="btn btn-danger" onclick="clearCart()">🗑️ Clear Cart</button>
+          <button class="btn btn-success" onclick="exportUtils.exportCartCSV(cartItems)">📄 Export CSV</button>
+          <button class="btn btn-secondary" onclick="exportUtils.exportCartPDF(cartItems)">📑 Export PDF</button>
+        </div>
+      </div>
 
     <div class="stats-grid">
       <div class="stat-card">
@@ -40,7 +94,7 @@
         <div class="stat-icon success">💰</div>
         <div class="stat-info">
           <h3>Total Price</h3>
-          <p id="totalPrice">$0.00</p>
+          <p id="totalPrice">₹0.00</p>
         </div>
       </div>
       <div class="stat-card">
@@ -54,7 +108,7 @@
         <div class="stat-icon danger">💳</div>
         <div class="stat-info">
           <h3>Avg Price</h3>
-          <p id="avgPrice">$0.00</p>
+          <p id="avgPrice">₹0.00</p>
         </div>
       </div>
     </div>
@@ -81,10 +135,11 @@
       <button class="btn btn-primary" onclick="openAddModal()">Browse Products</button>
     </div>
 
-    <div style="margin-top: 2rem; text-align: right;">
-      <button class="btn btn-success" style="font-size: 1.2rem; padding: 1rem 2rem;" onclick="checkout()">
-        💳 Checkout - <span id="checkoutTotal">$0.00</span>
-      </button>
+      <div style="margin-top: 2rem; text-align: right;">
+        <button class="btn btn-success" style="font-size: 1.2rem; padding: 1rem 2rem;" onclick="checkout()">
+          💳 Checkout - <span id="checkoutTotal">₹0.00</span>
+        </button>
+      </div>
     </div>
   </main>
 
@@ -143,9 +198,12 @@
   </div>
 
   <script src="/assets/js/app.js"></script>
+  <script src="/assets/js/utils/export.js"></script>
   <script>
     let cartItems = [];
     let products = [];
+    let customers = [];
+    let selectedCustomerId = null;
     let editingItemId = null;
 
     async function loadCart() {
@@ -174,13 +232,13 @@
     function populateProductSelect() {
       const select = document.getElementById('productSelect');
       select.innerHTML = '<option value="">-- Select Product --</option>' +
-        products.map(p => `<option value="${p.id}" data-price="${p.price}">${p.name} - $${parseFloat(p.price).toFixed(2)}</option>`).join('');
+        products.map(p => `<option value="${p.id}" data-price="${p.price}">${p.name} - ₹${parseFloat(p.price).toFixed(2)}</option>`).join('');
     }
 
     function updatePrice() {
       const select = document.getElementById('productSelect');
       const price = select.options[select.selectedIndex]?.dataset.price || '0';
-      document.getElementById('selectedPrice').value = '$' + parseFloat(price).toFixed(2);
+      document.getElementById('selectedPrice').value = '₹' + parseFloat(price).toFixed(2);
     }
 
     function renderCart() {
@@ -201,9 +259,9 @@
         return `
           <tr>
             <td><strong>${item.name}</strong></td>
-            <td>$${parseFloat(item.price).toFixed(2)}</td>
+            <td>₹${parseFloat(item.price).toFixed(2)}</td>
             <td>${item.quantity}</td>
-            <td><strong>$${subtotal.toFixed(2)}</strong></td>
+            <td><strong>₹${subtotal.toFixed(2)}</strong></td>
             <td>
               <div class="btn-group">
                 <button class="btn btn-primary btn-sm" onclick="editItem(${item.id})">✏️</button>
@@ -224,13 +282,17 @@
       const avgPrice = uniqueProducts > 0 ? totalPrice / totalItems : 0;
       
       document.getElementById('totalItems').textContent = totalItems;
-      document.getElementById('totalPrice').textContent = '$' + totalPrice.toFixed(2);
+      document.getElementById('totalPrice').textContent = '₹' + totalPrice.toFixed(2);
       document.getElementById('uniqueProducts').textContent = uniqueProducts;
-      document.getElementById('avgPrice').textContent = '$' + avgPrice.toFixed(2);
-      document.getElementById('checkoutTotal').textContent = '$' + totalPrice.toFixed(2);
+      document.getElementById('avgPrice').textContent = '₹' + avgPrice.toFixed(2);
+      document.getElementById('checkoutTotal').textContent = '₹' + totalPrice.toFixed(2);
     }
 
     function openAddModal() {
+      if (!selectedCustomerId) {
+        alert('Please select a customer first!');
+        return;
+      }
       document.getElementById('addForm').reset();
       document.getElementById('selectedPrice').value = '';
       document.getElementById('addModal').classList.add('active');
@@ -363,16 +425,147 @@
       loadCart();
     }
 
-    function checkout() {
+    async function checkout() {
       if (cartItems.length === 0) {
         alert('Your cart is empty!');
         return;
       }
-      alert('Checkout feature - Process payment and create order');
+      
+      if (!selectedCustomerId) {
+        alert('Please select a customer before checkout!');
+        return;
+      }
+      
+      const totalAmount = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+      const orderData = {
+        customer_id: selectedCustomerId,
+        total_amount: totalAmount,
+        status: 'Completed',
+        items: cartItems.map(item => ({
+          product_id: item.product_id,
+          product_name: item.name,
+          quantity: item.quantity,
+          price: item.price
+        }))
+      };
+      
+      try {
+        const res = await fetch('/api/orders', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(orderData)
+        });
+        const data = await res.json();
+        
+        if (data.status === 'created') {
+          alert(`Order #${data.data.id} created successfully!\nTotal: ₹${totalAmount.toFixed(2)}`);
+          
+          // Clear cart items from database
+          for (const item of cartItems) {
+            await fetch(`/api/cart/${item.id}`, { method: 'DELETE' });
+          }
+          
+          // Reset UI
+          selectedCustomerId = null;
+          document.getElementById('customerSelect').value = '';
+          document.getElementById('selectedCustomerInfo').style.display = 'none';
+          await loadCart();
+        }
+      } catch (error) {
+        console.error('Error creating order:', error);
+        alert('Failed to create order');
+      }
     }
 
-    loadCart();
+    async function loadCustomers() {
+      try {
+        const res = await fetch('/api/customers');
+        const data = await res.json();
+        customers = data.data || [];
+        populateCustomerSelect();
+      } catch (error) {
+        console.error('Error loading customers:', error);
+      }
+    }
+
+    function populateCustomerSelect() {
+      const select = document.getElementById('customerSelect');
+      select.innerHTML = '<option value="">-- Select Customer --</option>' +
+        customers.map(c => `<option value="${c.id}">${c.name} (${c.email})</option>`).join('');
+    }
+
+    function loadCustomerDetails() {
+      const select = document.getElementById('customerSelect');
+      selectedCustomerId = parseInt(select.value) || null;
+      
+      if (!selectedCustomerId) {
+        document.getElementById('selectedCustomerInfo').style.display = 'none';
+        document.getElementById('cartSection').style.display = 'none';
+        return;
+      }
+      
+      const customer = customers.find(c => c.id === selectedCustomerId);
+      if (customer) {
+        document.getElementById('custName').textContent = customer.name;
+        document.getElementById('custEmail').textContent = customer.email;
+        document.getElementById('custPhone').textContent = customer.phone || 'N/A';
+        document.getElementById('custAddress').textContent = customer.address || 'N/A';
+        document.getElementById('selectedCustomerInfo').style.display = 'block';
+        document.getElementById('cartSection').style.display = 'block';
+        loadCart();
+      }
+    }
+
+    function toggleCustomerForm() {
+      const form = document.getElementById('newCustomerForm');
+      const selection = document.getElementById('customerSelection');
+      
+      if (form.style.display === 'none') {
+        form.style.display = 'block';
+        selection.style.display = 'none';
+      } else {
+        form.style.display = 'none';
+        selection.style.display = 'block';
+      }
+    }
+
+    async function saveNewCustomer() {
+      const data = {
+        name: document.getElementById('newCustName').value,
+        email: document.getElementById('newCustEmail').value,
+        phone: document.getElementById('newCustPhone').value,
+        address: document.getElementById('newCustAddress').value
+      };
+      
+      if (!data.name || !data.email || !data.phone || !data.address) {
+        alert('Please fill all required fields');
+        return;
+      }
+      
+      try {
+        const res = await fetch('/api/customers', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        
+        if (res.ok) {
+          const result = await res.json();
+          alert('Customer added successfully!');
+          await loadCustomers();
+          selectedCustomerId = result.data.id;
+          document.getElementById('customerSelect').value = selectedCustomerId;
+          toggleCustomerForm();
+          loadCustomerDetails();
+        }
+      } catch (error) {
+        console.error('Error saving customer:', error);
+        alert('Failed to save customer');
+      }
+    }
+
     loadProducts();
+    loadCustomers();
   </script>
 </body>
 </html>

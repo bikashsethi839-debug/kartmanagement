@@ -1,6 +1,8 @@
 import os
 from .connection import get_connection, DB_PATH
-from .queries import CREATE_PRODUCTS_TABLE, CREATE_CART_TABLE, CREATE_REVIEWS_TABLE, CREATE_WISHLIST_TABLE, SEED_PRODUCTS, SEED_REVIEWS
+from .queries import (CREATE_PRODUCTS_TABLE, CREATE_CART_TABLE, CREATE_REVIEWS_TABLE, 
+                      CREATE_WISHLIST_TABLE, CREATE_CUSTOMERS_TABLE, CREATE_ORDERS_TABLE,
+                      CREATE_ORDER_ITEMS_TABLE, SEED_PRODUCTS, SEED_REVIEWS, SEED_CUSTOMERS)
 
 
 def init_db():
@@ -17,6 +19,9 @@ def init_db():
     cur.executescript(CREATE_CART_TABLE)
     cur.executescript(CREATE_REVIEWS_TABLE)
     cur.executescript(CREATE_WISHLIST_TABLE)
+    cur.executescript(CREATE_CUSTOMERS_TABLE)
+    cur.executescript(CREATE_ORDERS_TABLE)
+    cur.executescript(CREATE_ORDER_ITEMS_TABLE)
 
     # Seed
     cur.executemany(
@@ -31,7 +36,15 @@ def init_db():
             SEED_REVIEWS
         )
     except Exception:
-        # ignore if id not present yet
+        pass
+    
+    # Seed customers
+    try:
+        cur.executemany(
+            "INSERT OR IGNORE INTO customers (name, email, phone, address) VALUES (?, ?, ?, ?)",
+            SEED_CUSTOMERS
+        )
+    except Exception:
         pass
 
     conn.commit()

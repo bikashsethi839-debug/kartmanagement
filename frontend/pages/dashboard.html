@@ -14,6 +14,7 @@
         <a href="/catalog.html">📦 Catalog</a>
         <a href="/inventory.html">📊 Inventory</a>
         <a href="/cart.html">🛍️ Cart</a>
+        <a href="/customers.html">👥 Customers</a>
         <a href="/dashboard.html" class="active">📈 Dashboard</a>
       </div>
     </div>
@@ -22,7 +23,11 @@
   <main>
     <div class="page-header">
       <h1>📈 Dashboard</h1>
-      <button class="btn btn-primary" onclick="refreshData()">🔄 Refresh</button>
+      <div class="btn-group">
+        <button class="btn btn-primary" onclick="refreshData()">🔄 Refresh</button>
+        <button class="btn btn-success" onclick="exportUtils.exportProductsCSV(products)">📄 Export CSV</button>
+        <button class="btn btn-secondary" onclick="exportUtils.exportProductsPDF(products)">📑 Export PDF</button>
+      </div>
     </div>
 
     <div class="stats-grid">
@@ -166,6 +171,7 @@
   </div>
 
   <script src="/assets/js/app.js"></script>
+  <script src="/assets/js/utils/export.js"></script>
   <script>
     let products = [];
     let cartItems = [];
